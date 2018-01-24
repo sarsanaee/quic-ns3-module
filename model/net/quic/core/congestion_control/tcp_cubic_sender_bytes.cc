@@ -5,6 +5,7 @@
 #include "net/quic/core/congestion_control/tcp_cubic_sender_bytes.h"
 
 #include <algorithm>
+#include <iostream>
 #include <cstdint>
 
 #include "net/quic/core/congestion_control/prr_sender.h"
@@ -13,6 +14,8 @@
 #include "net/quic/platform/api/quic_bug_tracker.h"
 #include "net/quic/platform/api/quic_flags.h"
 #include "net/quic/platform/api/quic_logging.h"
+
+//#include <sys/time.h>
 
 namespace net {
 
@@ -80,6 +83,8 @@ void TcpCubicSenderBytes::SetCongestionWindowFromBandwidthAndRtt(
 void TcpCubicSenderBytes::SetCongestionWindowInPackets(
     QuicPacketCount congestion_window) {
   congestion_window_ = congestion_window * kDefaultTCPMSS;
+  //aghax
+  std::cout<< "cwnd1 " <<congestion_window_<< std::endl;
 }
 
 void TcpCubicSenderBytes::SetMinCongestionWindowInPackets(
@@ -109,6 +114,10 @@ void TcpCubicSenderBytes::OnPacketLost(QuicPacketNumber packet_number,
         // Reduce congestion window by lost_bytes for every loss.
         congestion_window_ = std::max(congestion_window_ - lost_bytes,
                                       min_slow_start_exit_window_);
+        //aghax
+        // timeval tv;
+        // gettimeofday(&tv, NULL);
+        std::cout<< "cwnd1 " <<congestion_window_ << std::endl;
         slowstart_threshold_ = congestion_window_;
       }
     }
@@ -133,14 +142,22 @@ void TcpCubicSenderBytes::OnPacketLost(QuicPacketNumber packet_number,
       min_slow_start_exit_window_ = congestion_window_ / 2;
     }
     congestion_window_ = congestion_window_ - kDefaultTCPMSS;
+    //aghax
+    std::cout<< "cwnd2 " <<congestion_window_<< std::endl;
   } else if (reno_) {
     congestion_window_ = congestion_window_ * RenoBeta();
+    //aghax
+    std::cout<< "cwnd3 " <<congestion_window_<< std::endl;
   } else {
     congestion_window_ =
         cubic_.CongestionWindowAfterPacketLoss(congestion_window_);
+        //aghax
+        std::cout<< "cwnd4 " <<congestion_window_<< std::endl;
   }
   if (congestion_window_ < min_congestion_window_) {
     congestion_window_ = min_congestion_window_;
+    //aghax
+    std::cout<< "cwnd5 " << congestion_window_<<std::endl;
   }
   slowstart_threshold_ = congestion_window_;
   largest_sent_at_last_cutback_ = largest_sent_packet_number_;
@@ -179,6 +196,8 @@ void TcpCubicSenderBytes::MaybeIncreaseCwnd(
   if (InSlowStart()) {
     // TCP slow start, exponential growth, increase by one for each ACK.
     congestion_window_ += kDefaultTCPMSS;
+        std::cout<< "cwnd11 " << congestion_window_<< std::endl;
+
     QUIC_DVLOG(1) << "Slow start; congestion window: " << congestion_window_
                   << " slowstart threshold: " << slowstart_threshold_;
     return;
@@ -192,6 +211,8 @@ void TcpCubicSenderBytes::MaybeIncreaseCwnd(
     if (num_acked_packets_ * num_connections_ >=
         congestion_window_ / kDefaultTCPMSS) {
       congestion_window_ += kDefaultTCPMSS;
+      //aghax
+      std::cout<< "cwnd6 " <<congestion_window_<< std::endl;
       num_acked_packets_ = 0;
     }
 
@@ -203,6 +224,8 @@ void TcpCubicSenderBytes::MaybeIncreaseCwnd(
         max_congestion_window_,
         cubic_.CongestionWindowAfterAck(acked_bytes, congestion_window_,
                                         rtt_stats_->min_rtt(), event_time));
+    //aghax
+    std::cout<< "cwnd7 " << congestion_window_<< std::endl;
     QUIC_DVLOG(1) << "Cubic; congestion window: " << congestion_window_
                   << " slowstart threshold: " << slowstart_threshold_;
   }
@@ -212,6 +235,8 @@ void TcpCubicSenderBytes::HandleRetransmissionTimeout() {
   cubic_.ResetCubicState();
   slowstart_threshold_ = congestion_window_ / 2;
   congestion_window_ = min_congestion_window_;
+  //aghax
+  std::cout<< "cwnd8 " <<congestion_window_<< std::endl;
 }
 
 void TcpCubicSenderBytes::OnConnectionMigration() {
@@ -221,6 +246,8 @@ void TcpCubicSenderBytes::OnConnectionMigration() {
   congestion_window_ = initial_tcp_congestion_window_;
   max_congestion_window_ = initial_max_tcp_congestion_window_;
   slowstart_threshold_ = initial_max_tcp_congestion_window_;
+  //aghax
+    std::cout<< "cwnd9 " <<congestion_window_<< std::endl;
 }
 
 CongestionControlType TcpCubicSenderBytes::GetCongestionControlType() const {
@@ -228,3 +255,4 @@ CongestionControlType TcpCubicSenderBytes::GetCongestionControlType() const {
 }
 
 }  // namespace net
+
