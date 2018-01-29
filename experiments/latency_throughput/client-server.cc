@@ -15,6 +15,7 @@
  */
 
 #include <fstream>
+#include <string>
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
 #include "ns3/internet-module.h"
@@ -239,10 +240,28 @@ main (int argc, char *argv[])
   
   //LogComponentEnable ("TcpClient", LOG_LEVEL_INFO);
   //LogComponentEnable ("TcpServer", LOG_LEVEL_INFO);
+  //Time::SetResolution (Time::NS);
   
-  bool tracing = false;
-  
+  bool tracing = true;
+  Time serverInterval = MicroSeconds (20);
+  Time clientInterval = MicroSeconds (50);
+  std::string delay = "0ms";
+  uint32_t clientMaximumPacketSize = 400; 
+  double percentile = 99.9;
+  double err = 0.0;
+
+
   CommandLine cmd;
+  cmd.AddValue ("tracing", "Flag to enable/disable tracing", tracing);
+  cmd.AddValue ("serverInterval",
+                "service Time", serverInterval);
+  cmd.AddValue("clientRate", "client rate", clientInterval);
+  cmd.AddValue("delay", " ", delay);
+  cmd.AddValue("err", " ", err);
+  cmd.AddValue("percentile", "enter the percentile", percentile);
+  cmd.AddValue("maxPacket", "maximum packet size of the client", clientMaximumPacketSize);
+
+  
   cmd.Parse (argc, argv);
   
   
@@ -250,14 +269,14 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("0ms"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1000Mbps"));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue (delay));
 
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
   //Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  //em->SetAttribute ("ErrorRate", DoubleValue (0.00001));
+  //em->SetAttribute ("ErrorRate", DoubleValue (err));
   //devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
@@ -288,21 +307,21 @@ main (int argc, char *argv[])
   //Server Creation Started
   uint16_t server_port = 5000;
   Ptr<TcpServer> server = CreateObject<TcpServer> ();
-  server->Setup(interfaces.GetAddress(0), server_port);
+  server->Setup(interfaces.GetAddress(0), server_port, 400, serverInterval);
   nodes.Get (0)->AddApplication(server);
-  server->SetStartTime (Seconds (0.));
-  server->SetStopTime (Seconds (10.));
+  server->SetStartTime (Seconds (0.0));
+  server->SetStopTime (Seconds (20.0));
   //Server Creation Ended
   
   //Client Creation Started
-  Time interval = Seconds (4);
   Ptr<TcpClient> client = CreateObject<TcpClient> ();
   Address peerAddress (interfaces.GetAddress (0));
   client->SetRemote(peerAddress, server_port);
-  client->SetInterval(interval);
+  client->SetInterval(clientInterval);
+  client->SetMaximumPacketSize(clientMaximumPacketSize);
   nodes.Get (1)->AddApplication(client);
   client->SetStartTime (Seconds (1.0));
-  client->SetStopTime (Seconds (10.));
+  client->SetStopTime (Seconds (20.0));
   
   //Client Creation Ended
 
@@ -315,7 +334,7 @@ main (int argc, char *argv[])
     flowMonitor = flowHelper.InstallAll();
   
 
-  Simulator::Stop (Seconds (12));
+  Simulator::Stop (Seconds (20.0));
   Simulator::Run ();
   
   if(tracing)
