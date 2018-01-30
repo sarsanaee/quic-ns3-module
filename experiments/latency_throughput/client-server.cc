@@ -249,6 +249,7 @@ main (int argc, char *argv[])
   uint32_t clientMaximumPacketSize = 400; 
   double percentile = 99.9;
   double err = 0.0;
+  std::string linkBandWidth = "1000Mbps";
 
 
   CommandLine cmd;
@@ -341,7 +342,7 @@ main (int argc, char *argv[])
   {
     std::cout << "Now " << last_time(flowMonitor).As(Time::S) << std::endl;
     latency_throughput_plot(flowMonitor);
-    flowMonitor->SerializeToXmlFile("data/client-server.xml", false, false);
+    flowMonitor->SerializeToXmlFile("data/client-server-" + linkBandWidth + ".xml", false, false);
   }
   
   Simulator::Destroy ();
