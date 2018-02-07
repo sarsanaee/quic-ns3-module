@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<FlowMonitor>
+  <FlowStats>
+    <Flow flowId="1" timeFirstTxPacket="+1000000000.0ns" timeFirstRxPacket="+1000046399.0ns" timeLastTxPacket="+5315867491.0ns" timeLastRxPacket="+5315910691.0ns" delaySum="+1367498863874.0ns" jitterSum="+7723613495.0ns" lastDelay="+43200.0ns" txBytes="5125760" rxBytes="5125760" txPackets="12553" rxPackets="12553" lostPackets="0" timesForwarded="0" percentileLatency="+120017090.0ns" averageLatency="+108938011.0ns" throughput="75.9198">
+    </Flow>
+    <Flow flowId="2" timeFirstTxPacket="+1000046399.0ns" timeFirstRxPacket="+1000092798.0ns" timeLastTxPacket="+5115437092.0ns" timeLastRxPacket="+5115867491.0ns" delaySum="+24552434322.0ns" jitterSum="+550538106.0ns" lastDelay="+430399.0ns" txBytes="3757904" rxBytes="3757904" txPackets="8575" rxPackets="8575" lostPackets="0" timesForwarded="0" percentileLatency="+363199.0ns" averageLatency="+2863257.0ns" throughput="55.7257">
+    </Flow>
+  </FlowStats>
+  <Ipv4FlowClassifier>
+    <Flow flowId="2" sourceAddress="10.1.1.1" destinationAddress="10.1.1.2" protocol="6" sourcePort="5000" destinationPort="49153">
+      <Dscp value="0x0" packets="8575" />
+    </Flow>
+    <Flow flowId="1" sourceAddress="10.1.1.2" destinationAddress="10.1.1.1" protocol="6" sourcePort="49153" destinationPort="5000">
+      <Dscp value="0x0" packets="12553" />
+    </Flow>
+  </Ipv4FlowClassifier>
+  <Ipv6FlowClassifier>
+  </Ipv6FlowClassifier>
+</FlowMonitor>

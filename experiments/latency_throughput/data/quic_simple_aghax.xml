@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<FlowMonitor>
+  <FlowStats>
+    <Flow flowId="1" timeFirstTxPacket="+0.0ns" timeFirstRxPacket="+1103.0ns" timeLastTxPacket="+83779224.0ns" timeLastRxPacket="+83779283.0ns" delaySum="+4064508.0ns" jitterSum="+44870.0ns" lastDelay="+59.0ns" txBytes="5027236" rxBytes="5027236" txPackets="39059" rxPackets="39059" lostPackets="0" timesForwarded="0" percentileLatency="+59.0ns" averageLatency="+104.0ns" throughput="3662.5">
+    </Flow>
+    <Flow flowId="2" timeFirstTxPacket="+1103.0ns" timeFirstRxPacket="+1146.0ns" timeLastTxPacket="+83695599.0ns" timeLastRxPacket="+83780981.0ns" delaySum="+81810992159.0ns" jitterSum="+84247683.0ns" lastDelay="+85382.0ns" txBytes="108194606" rxBytes="104665084" txPackets="78573" rxPackets="76011" lostPackets="2562" timesForwarded="0" percentileLatency="+1125001.0ns" averageLatency="+1076304.0ns" throughput="76250.4">
+      <packetsDropped reasonCode="0" number="0" />
+      <packetsDropped reasonCode="1" number="0" />
+      <packetsDropped reasonCode="2" number="0" />
+      <packetsDropped reasonCode="3" number="0" />
+      <packetsDropped reasonCode="4" number="2562" />
+      <bytesDropped reasonCode="0" bytes="0" />
+      <bytesDropped reasonCode="1" bytes="0" />
+      <bytesDropped reasonCode="2" bytes="0" />
+      <bytesDropped reasonCode="3" bytes="0" />
+      <bytesDropped reasonCode="4" bytes="3529522" />
+    </Flow>
+  </FlowStats>
+  <Ipv4FlowClassifier>
+    <Flow flowId="1" sourceAddress="10.1.1.1" destinationAddress="10.1.1.2" protocol="17" sourcePort="49153" destinationPort="6121">
+      <Dscp value="0x0" packets="39059" />
+    </Flow>
+    <Flow flowId="2" sourceAddress="10.1.1.2" destinationAddress="10.1.1.1" protocol="17" sourcePort="6121" destinationPort="49153">
+      <Dscp value="0x0" packets="78573" />
+    </Flow>
+  </Ipv4FlowClassifier>
+  <Ipv6FlowClassifier>
+  </Ipv6FlowClassifier>
+</FlowMonitor>
