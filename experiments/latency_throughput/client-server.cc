@@ -177,11 +177,11 @@ Time last_time(Ptr<FlowMonitor> fm) {
 //std::vector<Time> delays_container;
 //  std::vector<double> throughputs_container;
 
-void latency_throughput_plot(Ptr<FlowMonitor> fm) {
+void latency_throughput_plot(Ptr<FlowMonitor> fm, std::string name) {
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper.CreateFileStream ("first_flow.dat");
-  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper.CreateFileStream ("second_flow.dat");
+  Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper.CreateFileStream ("data/tcp/first_flow_" + name +".dat");
+  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper.CreateFileStream ("data/tcp/second_flow_" + name +".dat");
   
   
   //GnuplotHelper plotHelper;
@@ -249,7 +249,7 @@ main (int argc, char *argv[])
   uint32_t clientMaximumPacketSize = 400; 
   double percentile = 99.9;
   double err = 0.0;
-  std::string linkBandWidth = "1000Mbps";
+  std::string linkBandWidth = "1Mbps";
 
 
   CommandLine cmd;
@@ -261,7 +261,7 @@ main (int argc, char *argv[])
   cmd.AddValue("err", " ", err);
   cmd.AddValue("percentile", "enter the percentile", percentile);
   cmd.AddValue("maxPacket", "maximum packet size of the client", clientMaximumPacketSize);
-
+  cmd.AddValue("linkbandwidth", " ", linkBandWidth);
   
   cmd.Parse (argc, argv);
   
@@ -270,15 +270,15 @@ main (int argc, char *argv[])
   nodes.Create (2);
 
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1000Mbps"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue (linkBandWidth));
   pointToPoint.SetChannelAttribute ("Delay", StringValue (delay));
 
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
-  //Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  //em->SetAttribute ("ErrorRate", DoubleValue (err));
-  //devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
+  Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
+  em->SetAttribute ("ErrorRate", DoubleValue (err));
+  devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
   stack.Install (nodes);
@@ -311,7 +311,7 @@ main (int argc, char *argv[])
   server->Setup(interfaces.GetAddress(0), server_port, 400, serverInterval);
   nodes.Get (0)->AddApplication(server);
   server->SetStartTime (Seconds (0.0));
-  server->SetStopTime (Seconds (20.0));
+  server->SetStopTime (Seconds (5.0));
   //Server Creation Ended
   
   //Client Creation Started
@@ -322,7 +322,7 @@ main (int argc, char *argv[])
   client->SetMaximumPacketSize(clientMaximumPacketSize);
   nodes.Get (1)->AddApplication(client);
   client->SetStartTime (Seconds (1.0));
-  client->SetStopTime (Seconds (20.0));
+  client->SetStopTime (Seconds (5.0));
   
   //Client Creation Ended
 
@@ -335,13 +335,13 @@ main (int argc, char *argv[])
     flowMonitor = flowHelper.InstallAll();
   
 
-  Simulator::Stop (Seconds (20.0));
+  Simulator::Stop (Seconds (6.0));
   Simulator::Run ();
   
   if(tracing)
   {
     std::cout << "Now " << last_time(flowMonitor).As(Time::S) << std::endl;
-    latency_throughput_plot(flowMonitor);
+    latency_throughput_plot(flowMonitor, linkBandWidth);
     flowMonitor->SerializeToXmlFile("data/client-server-" + linkBandWidth + ".xml", false, false);
   }
   

@@ -18,6 +18,8 @@
  * Author: Diego Araújo <diegoamc@ime.usp.br>
  * Heavily based on tcp-bulk-send example.
  *
+ * Adapted by Alireza Sanaee <sarsanaee@comp.iust.ac.ir>
+ *
  * Network topology
  *
  *       n0 ----------- n1
@@ -42,6 +44,11 @@
 
 using namespace ns3;
 
+#include <string>
+using std::string;
+
+
+
 
 NS_LOG_COMPONENT_DEFINE ("QuicModuleExample");
 
@@ -53,20 +60,53 @@ Time last_time(Ptr<FlowMonitor> fm) {
 }
 
 
-#include <string>
-using std::string;
+
+void latency_throughput_plot(Ptr<FlowMonitor> fm, string name) {
+
+  AsciiTraceHelper asciiTraceHelper;
+  Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper.CreateFileStream ("data/quic/first_flow_" + name +".dat");
+  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper.CreateFileStream ("data/quic/second_flow_" + name +".dat");
+  
+  int i = 0;
+
+  for(auto e : fm->GetFlowStats())
+  {
+      if(i)
+      {
+        for(uint32_t i = 0; i< e.second.delays_container.size(); i++)
+        {
+          *stream1->GetStream ()<< e.second.delays_container[i].GetNanoSeconds () << "\t" <<
+                       e.second.throughputs_container[i] << std::endl;
+        }
+      }
+      else
+      {
+        for(uint32_t i = 0; i< e.second.delays_container.size(); i++)
+          {
+            *stream2->GetStream () << e.second.delays_container[i].GetNanoSeconds () << "\t" <<
+                         e.second.throughputs_container[i] << std::endl;
+          }
+      }
+      i++;
+  }
+  
+  std::cout << i << std::endl;
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
   Time::SetResolution(Time::NS);
 
   bool tracing = false;
-  uint64_t maxBytes = 10;
+  uint64_t maxBytes = 100000;
   double err = 0;
   double percentile = 0.999;
 
-  string dataRate = "20Mbps";
-  string delay = "30ms";
+  string dataRate = "1Mbps";
+  string delay = "0ms";
 
   CommandLine cmd;
   cmd.AddValue ("tracing", "Flag to enable/disable tracing", tracing);
@@ -92,11 +132,11 @@ main (int argc, char *argv[])
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
-  Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  em->SetAttribute ("ErrorRate", DoubleValue (err));
-  em->SetAttribute ("ErrorUnit", StringValue("ERROR_UNIT_PACKET"));
-  devices.Get (0)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
-  devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
+  //Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
+  //em->SetAttribute ("ErrorRate", DoubleValue (err));
+  //em->SetAttribute ("ErrorUnit", StringValue("ERROR_UNIT_PACKET"));
+  //devices.Get (0)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
+  //devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
   stack.Install (nodes);
@@ -133,13 +173,13 @@ main (int argc, char *argv[])
   FlowMonitorHelper flowHelper;
   flowMonitor = flowHelper.InstallAll();
 
-  Simulator::Stop(Seconds(20));
+  Simulator::Stop(Seconds(100));
   Simulator::Run ();
 
   std::cout << "Now " << last_time(flowMonitor).As(Time::S) << std::endl;
   //flowMonitor->SerializeToXmlFile("data/quic_simple_" + std::to_string(maxBytes) + "_" + dataRate + "_" + delay + "_" + std::to_string(err) + "_" + std::to_string(percentile) + ".xml", false, false);
   flowMonitor->SerializeToXmlFile("data/quic_simple_aghax.xml", false, false);
-
+  latency_throughput_plot(flowMonitor, dataRate);
   Simulator::Destroy ();
   //Ptr<QuicClient> client = DynamicCast<QuicClient> (clientApps.Get (0));
   //std::cout << "Total Bytes Received: " << client->GetTotalRx () << std::endl;
