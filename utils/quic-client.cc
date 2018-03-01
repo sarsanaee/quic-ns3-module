@@ -32,6 +32,7 @@
 #include "ns3/boolean.h"
 #include "ns3/trace-source-accessor.h"
 #include "ns3/uinteger.h"
+#include "ns3/integer.h"
 #include "ns3/udp-socket-factory.h"
 #include "ns3/quic-header.h"
 #include "ns3/quic-stream-frame.h"
@@ -121,6 +122,11 @@ namespace ns3 {
             UintegerValue (10),
             ns3::MakeUintegerAccessor (&QuicClient::m_maxBytes),
             ns3::MakeUintegerChecker<unsigned> (uint64_t(1)))
+         .AddAttribute ("maxPacketSize",
+           "MaximumPacketSize in QUIC Protocol",
+            UintegerValue (10),
+            ns3::MakeUintegerAccessor (&QuicClient::m_maxPacketSize),
+            ns3::MakeUintegerChecker<unsigned> ())
         ;
       return tid;
     }
@@ -199,7 +205,9 @@ namespace ns3 {
     proof_verifier.reset(new FakeProofVerifier());
 
     client = new net::QuicSimpleClient(net::QuicSocketAddress(ip_addr, addr.GetPort()), server_id, versions, std::move(proof_verifier));
-    client->set_initial_max_packet_length(net::kDefaultMaxPacketSize);
+    client->set_initial_max_packet_length(net::kDefaultMaxPacketSize); // aghax
+    std::cout<<net::kDefaultMaxPacketSize<<std::endl;
+    //client->set_initial_max_packet_length(m_maxPacketSize); // aghax
 
     if(!client->Initialize()) {
       cerr << "FAIL" << endl;
@@ -243,6 +251,8 @@ namespace ns3 {
 
   void QuicClient::HandleRead (Ptr<Socket> socket)
   {
+    std::default_random_engine generator;
+    std::poisson_distribution<int> distribution(m_maxPacketSize);
     socket->SetRecvCallback(MakeNullCallback<void, Ptr<Socket>>());
     NS_LOG_FUNCTION (this << socket);
     //cerr << "QuicClient::HandleRead()" << endl;
@@ -261,9 +271,12 @@ namespace ns3 {
       else {
         if (client->ConnectLogic())
           client->Connect();
-        else {
+        else { 
           client->FinishConnect();
-          SendRequest();
+          std::cout << m_maxPacketSize << std::endl;
+          //Simulator::Schedule(MicroSeconds(m_maxPacketSize), &QuicClient::SendRequest,  this);
+          Simulator::Schedule(MicroSeconds(distribution(generator)), &QuicClient::SendRequest,  this);
+          //SendRequest();
         }
       }
     } else if(cur_state == SEND_REQUEST) {
@@ -312,3 +325,4 @@ namespace ns3 {
     }
 
 } // Namespace ns3
+

@@ -52,6 +52,8 @@ public:
    * \param zeroRtt a flag to indicate whether or not to start a 0-RTT
    *        connection with the server.
    */
+  QuicClientHelper (std::string protocol, Address address, bool zeroRtt, int maxBytes, uint64_t maxPacketSize);
+  
   QuicClientHelper (std::string protocol, Address address, bool zeroRtt, int maxBytes);
 
   /**
@@ -107,4 +109,5 @@ private:
 } // namespace ns3
 
 #endif /* QUIC_CLIENT_HELPER_H */
+
 

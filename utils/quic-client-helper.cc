@@ -26,8 +26,20 @@
 #include "ns3/boolean.h"
 #include "ns3/names.h"
 #include "ns3/uinteger.h"
+#include "ns3/integer.h"
 
 namespace ns3 {
+
+QuicClientHelper::QuicClientHelper (std::string protocol, Address address, 
+bool zeroRtt, int maxBytes, uint64_t maxPacketSize)
+{
+  m_factory.SetTypeId ("ns3::QuicClient");
+  m_factory.Set ("Protocol", StringValue (protocol));
+  m_factory.Set ("ServerAddress", AddressValue (address));
+  m_factory.Set ("ZeroRttHandshake", BooleanValue (zeroRtt));
+  m_factory.Set ("MaxBytes", UintegerValue(maxBytes));
+  m_factory.Set ("maxPacketSize", UintegerValue(maxPacketSize));
+}
 
 QuicClientHelper::QuicClientHelper (std::string protocol, Address address, bool zeroRtt, int maxBytes)
 {
@@ -79,3 +91,4 @@ QuicClientHelper::InstallPriv (Ptr<Node> node) const
 }
 
 } // namespace ns3
+

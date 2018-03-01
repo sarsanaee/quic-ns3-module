@@ -26,6 +26,7 @@
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
 #include "ns3/address.h"
+#include <random>
 
 #include "base/at_exit.h"
 #include "base/message_loop/message_loop.h"
@@ -119,6 +120,11 @@ private:
   TypeId      m_tid;            //!< Protocol TypeId
   bool        m_zeroRtt;        //!< 0-RTT flag
   unsigned    m_maxBytes;
+  
+  // aghax
+  uint64_t    m_maxPacketSize;
+
+
 
   /// Traced Callback: received packets, source address.
   TracedCallback<Ptr<const Packet>, const Address &> m_rxTrace;
@@ -136,4 +142,5 @@ public:
 } // namespace ns3
 
 #endif /* QUIC_CLIENT_H */
+
 

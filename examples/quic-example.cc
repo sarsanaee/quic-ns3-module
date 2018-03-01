@@ -64,8 +64,8 @@ Time last_time(Ptr<FlowMonitor> fm) {
 void latency_throughput_plot(Ptr<FlowMonitor> fm, string name) {
 
   AsciiTraceHelper asciiTraceHelper;
-  Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper.CreateFileStream ("data/quic/first_flow_" + name +".dat");
-  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper.CreateFileStream ("data/quic/second_flow_" + name +".dat");
+  Ptr<OutputStreamWrapper> stream1 = asciiTraceHelper.CreateFileStream ("data/quic/first_flow_" + name + "_p" + ".dat");
+  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper.CreateFileStream ("data/quic/second_flow_" + name + "_p" + ".dat");
   
   int i = 0;
 
@@ -75,8 +75,8 @@ void latency_throughput_plot(Ptr<FlowMonitor> fm, string name) {
       {
         for(uint32_t i = 0; i< e.second.delays_container.size(); i++)
         {
-          *stream1->GetStream ()<< e.second.delays_container[i].GetNanoSeconds () << "\t" <<
-                       e.second.throughputs_container[i] << std::endl;
+           *stream1->GetStream ()<< e.second.delays_container[i].GetNanoSeconds () << "\t" <<
+                        e.second.throughputs_container[i] << std::endl;
         }
       }
       else
@@ -102,8 +102,9 @@ main (int argc, char *argv[])
 
   bool tracing = false;
   uint64_t maxBytes = 100000;
-  double err = 0;
+  double err = 0.1;
   double percentile = 0.999;
+  uint64_t maxPacketSize = 128;
 
   string dataRate = "1Mbps";
   string delay = "0ms";
@@ -116,6 +117,7 @@ main (int argc, char *argv[])
   cmd.AddValue("delay", " ", delay);
   cmd.AddValue("err", " ", err);
   cmd.AddValue("percentile", "enter the percentile", percentile);
+  cmd.AddValue("packetSize", "enter the packet size", maxPacketSize);
 
   cmd.Parse (argc,argv);
 
@@ -132,10 +134,10 @@ main (int argc, char *argv[])
   NetDeviceContainer devices;
   devices = pointToPoint.Install (nodes);
 
-  //Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
-  //em->SetAttribute ("ErrorRate", DoubleValue (err));
-  //em->SetAttribute ("ErrorUnit", StringValue("ERROR_UNIT_PACKET"));
-  //devices.Get (0)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
+  Ptr<RateErrorModel> em = CreateObject<RateErrorModel> ();
+  em->SetAttribute ("ErrorRate", DoubleValue (err));
+  em->SetAttribute ("ErrorUnit", StringValue("ERROR_UNIT_PACKET"));
+  devices.Get (0)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
   //devices.Get (1)->SetAttribute ("ReceiveErrorModel", PointerValue (em));
 
   InternetStackHelper stack;
@@ -149,7 +151,7 @@ main (int argc, char *argv[])
   /* Client */
   uint16_t port = 6121;
   QuicClientHelper clientHelper ("ns3::UdpSocketFactory",
-                         InetSocketAddress (interfaces.GetAddress (1), port), true, maxBytes);
+                         InetSocketAddress (interfaces.GetAddress (1), port), true, maxBytes, maxPacketSize);
   ApplicationContainer clientApps = clientHelper.Install (nodes.Get (0));
   clientApps.Start (Seconds (0.0));
 
@@ -178,12 +180,10 @@ main (int argc, char *argv[])
 
   std::cout << "Now " << last_time(flowMonitor).As(Time::S) << std::endl;
   //flowMonitor->SerializeToXmlFile("data/quic_simple_" + std::to_string(maxBytes) + "_" + dataRate + "_" + delay + "_" + std::to_string(err) + "_" + std::to_string(percentile) + ".xml", false, false);
-  flowMonitor->SerializeToXmlFile("data/quic_simple_aghax.xml", false, false);
-  latency_throughput_plot(flowMonitor, dataRate);
+  flowMonitor->SerializeToXmlFile("data/quic/quic_simple_aghax.xml", true, true);
+  latency_throughput_plot(flowMonitor, dataRate + "_" + std::to_string(maxPacketSize));
   Simulator::Destroy ();
   //Ptr<QuicClient> client = DynamicCast<QuicClient> (clientApps.Get (0));
   //std::cout << "Total Bytes Received: " << client->GetTotalRx () << std::endl;
   return 0;
 }
-
-
